@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - m206_network
+
+  auth-service:
+    build: ./auth-service
+    container_name: auth-service
+    ports:
+      - "5001:5001"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  user-service:
+    build: ./user-service
+    container_name: user-service
+    ports:
+      - "5002:5002"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  admin-service:
+    build: ./admin-service
+    container_name: admin-service
+    ports:
+      - "5003:5003"
+    environment:
+      - USER_SERVICE_URL=http://user-service:5002
+    depends_on:
+      - user-service
+    networks:
+      - m206_network
+    restart: on-failure
+
+  project-service:
+    build: ./project-service
+    container_name: project-service
+    ports:
+      - "5004:5004"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  task-service:
+    build: ./task-service
+    container_name: task-service
+    ports:
+      - "5005:5005"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  chat-service:
+    build: ./chat-service
+    container_name: chat-service
+    ports:
+      - "5006:5006"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  report-service:
+    build: ./report-service
+    container_name: report-service
+    ports:
+      - "5007:5007"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+      - JWT_SECRET=secret_m206_jwt
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: on-failure
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+    networks:
+      - m206_network
+    restart: on-failure
+
+  seed:
+    build: ./seed
+    container_name: seed
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/projet_m206_db
+    depends_on:
+      - mongodb
+    networks:
+      - m206_network
+    restart: "no"
+
+volumes:
+  mongo_data:
+
+networks:
+  m206_network:
+    driver: bridge
